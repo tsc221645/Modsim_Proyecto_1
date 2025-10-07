@@ -53,7 +53,7 @@ def run_experiment(
     if run_lp:
         print("Ejecutando LP...")
         start = time.time()
-        lp_route, lp_cost, lp_vars, lp_cons = solve_tsp_lp(D,120)
+        lp_route, lp_cost, lp_vars, lp_cons = solve_tsp_lp(D,900)
         lp_time = time.time() - start
 
         if lp_cost is not None:

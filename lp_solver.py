@@ -6,7 +6,8 @@ def solve_tsp_lp(D, time_limit=60):
     n = len(D)
     model = pulp.LpProblem("TSP", pulp.LpMinimize)
 
-    x = [[pulp.LpVariable(f"x_{i}_{j}", cat="Binary") for j in range(n)] for i in range(n)]
+    x = [[pulp.LpVariable(f"x_{i}_{j}", lowBound=0, upBound=1) for j in range(n)] for i in range(n)]
+
     u = [pulp.LpVariable(f"u_{i}", lowBound=0, upBound=n - 1, cat="Integer") for i in range(n)]
 
     # Fijar u[0] = 0 para estabilidad
@@ -23,7 +24,14 @@ def solve_tsp_lp(D, time_limit=60):
             if i != j:
                 model += u[i] - u[j] + n * x[i][j] <= n - 1
 
-    solver = pulp.PULP_CBC_CMD(msg=True, timeLimit=time_limit)
+    try:
+        # Intentar usar HiGHS si está disponible
+        solver = pulp.HiGHS_CMD(timeLimit=time_limit)
+        model.solve(solver)
+    except Exception as e:
+        print(f"[LP WARNING] HiGHS no disponible, usando CBC ({e})")
+        solver = pulp.PULP_CBC_CMD(msg=True, timeLimit=time_limit)
+        model.solve(solver)
 
     try:
         model.solve(solver)
