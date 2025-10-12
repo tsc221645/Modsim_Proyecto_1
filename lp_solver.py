@@ -1,31 +1,74 @@
 import pulp
-from distance import compute_tour_length
+import numpy as np
 
-def solve_tsp_lp(D):
+
+def solve_tsp_lp(D, time_limit=60):
     n = len(D)
-    prob = pulp.LpProblem("TSP", pulp.LpMinimize)
+    model = pulp.LpProblem("TSP", pulp.LpMinimize)
 
-    x = pulp.LpVariable.dicts("x", (range(n), range(n)), cat="Binary")
-    u = pulp.LpVariable.dicts("u", range(n), lowBound=0, upBound=n-1, cat="Integer")
+    x = [[pulp.LpVariable(f"x_{i}_{j}", lowBound=0, upBound=1) for j in range(n)] for i in range(n)]
 
-    prob += pulp.lpSum(D[i][j] * x[i][j] for i in range(n) for j in range(n))
+    u = [pulp.LpVariable(f"u_{i}", lowBound=0, upBound=n - 1, cat="Integer") for i in range(n)]
+
+    # Fijar u[0] = 0 para estabilidad
+    model += (u[0] == 0)
+
+    model += pulp.lpSum(D[i][j] * x[i][j] for i in range(n) for j in range(n) if i != j)
 
     for i in range(n):
-        prob += pulp.lpSum(x[i][j] for j in range(n) if j != i) == 1
-        prob += pulp.lpSum(x[j][i] for j in range(n) if j != i) == 1
+        model += pulp.lpSum(x[i][j] for j in range(n) if i != j) == 1
+        model += pulp.lpSum(x[j][i] for j in range(n) if i != j) == 1
 
     for i in range(1, n):
         for j in range(1, n):
             if i != j:
-                prob += u[i] - u[j] + n * x[i][j] <= n-1
+                model += u[i] - u[j] + n * x[i][j] <= n - 1
 
-    prob.solve(pulp.PULP_CBC_CMD(msg=0))
+    try:
+        # Intentar usar HiGHS si está disponible
+        solver = pulp.HiGHS_CMD(timeLimit=time_limit)
+        model.solve(solver)
+    except Exception as e:
+        print(f"[LP WARNING] HiGHS no disponible, usando CBC ({e})")
+        solver = pulp.PULP_CBC_CMD(msg=True, timeLimit=time_limit)
+        model.solve(solver)
 
-    tour = [0]
-    while len(tour) < n:
-        last = tour[-1]
+    try:
+        model.solve(solver)
+    except Exception as e:
+        print(f"[LP ERROR] CBC falló o se bloqueó: {e}")
+        return [], None, 0, 0
+
+
+    status = pulp.LpStatus[model.status]
+    print(f"[LP] Estado: {status}")
+
+    if status not in ["Optimal", "Integer Feasible"]:
+        print("[LP] No se encontró solución óptima dentro del límite de tiempo.")
+        return [], None, len(model.variables()), len(model.constraints)
+
+    visited = [0]
+    last = 0
+    while len(visited) < n:
+        next_city = None
         for j in range(n):
-            if pulp.value(x[last][j]) == 1:
-                tour.append(j)
+            if j not in visited and pulp.value(x[last][j]) > 0.5:
+                next_city = j
                 break
-    return tour, compute_tour_length(D, tour)
+        if next_city is None:
+            for j in range(n):
+                if j not in visited and pulp.value(x[last][j]) > 0.1:
+                    next_city = j
+                    break
+        if next_city is None:
+            break
+        visited.append(next_city)
+        last = next_city
+    visited.append(0)
+
+    total_cost = pulp.value(pulp.lpSum(D[i][j] * x[i][j] for i in range(n) for j in range(n)))
+
+    num_vars = len(model.variables())
+    num_constraints = len(model.constraints)
+
+    return visited, total_cost, num_vars, num_constraints

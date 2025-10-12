@@ -1,0 +1,4 @@
+Escenario,n,N,maxIter,crossover_rate,mutation_rate,elite_k,GA_len,GA_time,LP_len,LP_time,LP_vars,LP_cons,LP_status
+EIL101,101,200,800,0.7,0.4,3,670.963555,37.38,582.040805,2.197,10201,10103,Optimal
+GR229,229,250,1000,0.7,0.4,3,1777.839699,205.29,1129.853459,12.122,52441,52215,Optimal
+Inventado_100,100,150,500,0.7,0.4,3,782.937752,17.475,706.227893,2.028,10000,9903,Optimal

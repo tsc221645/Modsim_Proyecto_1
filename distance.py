@@ -1,12 +1,22 @@
 import numpy as np
 
+
 def distance_matrix(coords):
+
     n = len(coords)
     D = np.zeros((n, n))
     for i in range(n):
         for j in range(n):
-            D[i][j] = np.linalg.norm(coords[i] - coords[j])
+            if i != j:
+                xi, yi = coords[i]
+                xj, yj = coords[j]
+                D[i, j] = np.hypot(xi - xj, yi - yj)
     return D
 
-def compute_tour_length(D, tour):
-    return sum(D[tour[i], tour[(i + 1) % len(tour)]] for i in range(len(tour)))
+
+def total_distance(D, route):
+    n = len(route)
+    dist = 0.0
+    for i in range(n):
+        dist += D[route[i], route[(i + 1) % n]] 
+    return dist

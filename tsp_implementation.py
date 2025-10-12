@@ -110,7 +110,7 @@ def genetic_algorithm_tsp_optimizado(D, N=200, maxIter=800, crossover_rate=0.7, 
     return best_solution, best_fitness_per_gen
 
 
-coords = read_tsp_file("berlin52.tsp")
+coords = read_tsp_file("inventado100.tsp")
 D = distance_matrix(coords)
 best_tour, history = genetic_algorithm_tsp_optimizado(D)
 distancia = compute_tour_length(D, best_tour)
@@ -143,12 +143,8 @@ def plot_fitness_evolution(fitness_history):
     plt.tight_layout()
     plt.show()
 
-# =====================
-# Visualización final
-# =====================
 plot_tour(coords, best_tour, title=f"Mejor recorrido encontrado (D = {distancia:.2f})")
 plot_fitness_evolution(history)
 
-# Mostrar mejor tour
 print("\nRecorrido final (best_tour):")
 print(best_tour)
