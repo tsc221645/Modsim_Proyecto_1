@@ -30,13 +30,15 @@ def run_experiment(
     start = time.time()
     best_route, best_cost, best_history = genetic_algorithm_tsp(
         D,
-        N=N,
-        maxIter=maxIter,
-        crossover_rate=crossover_rate,
-        mutation_rate=mutation_rate,
-        elite_k=elite_k,
-        seed=seed
+        N=400,
+        maxIter=1200,
+        crossover_rate=0.85,
+        mutation_rate=0.28,
+        elite_k=5,
+        seed=42,
+        log_every=100
     )
+
     t_ga = time.time() - start
     print(f"[GA] n={n}  Mejor longitud: {best_cost:.4f}  Tiempo: {t_ga:.2f}s")
 
@@ -99,6 +101,6 @@ if __name__ == "__main__":
             "elite_k", "GA_len", "GA_time", "LP_len", "LP_time", "LP_vars", "LP_cons", "LP_status"
         ])
 
-    run_experiment("eil101.tsp", "EIL101", N=200, maxIter=800, seed=42)
-    run_experiment("gr229.tsp", "GR229", N=250, maxIter=1000, seed=123)
-    run_experiment("inventado100.tsp", "Inventado_100", N=150, maxIter=500, seed=99)
+    run_experiment("eil101.tsp", "EIL101", N=200, maxIter=1000, seed=40)
+    run_experiment("gr229.tsp", "GR229", N=250, maxIter=1000, seed=100)
+    run_experiment("inventado100.tsp", "Inventado_100", N=150, maxIter=500, seed=42)
